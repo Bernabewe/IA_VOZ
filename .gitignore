@@ -1,0 +1,27 @@
+# Entorno Virtual
+env_voz/
+venv/
+env/
+*.venv
+
+# Cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Datos y Modelos Pesados
+Dataset Voz/
+dataset_reconocimiento_voz/
+*.wav
+*.mp3
+tmp_model/
+pretrained_models/
+*.pt
+*.onnx
+*.pkl
+
+# Archivos de Entorno de Desarrollo (IDE)
+.vscode/
+.idea/
+*.swp
+.DS_Store
