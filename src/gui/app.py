@@ -136,7 +136,8 @@ class SpeakerRecognitionApp(ctk.CTk):
             self.matcher = SpeakerMatcher(threshold=initial_tau)
             self.after(0, self._on_model_ready)
         except Exception as e:
-            self.after(0, lambda: self.lbl_status.configure(text=f"Error cargando modelo: {e}", text_color="#EF4444"))
+            err_msg = str(e)
+            self.after(0, lambda msg=err_msg: self.lbl_status.configure(text=f"Error cargando modelo: {msg}", text_color="#EF4444"))
 
     def _on_model_ready(self):
         self.lbl_status.configure(text="Sistema Listo (28 Hablantes en Base de Datos)", text_color="#10B981")
@@ -175,7 +176,8 @@ class SpeakerRecognitionApp(ctk.CTk):
             ident, score, candidate, _ = self.matcher.identify_speaker(wav_path)
             self.after(0, lambda: self._display_result(ident, score, candidate))
         except Exception as e:
-            self.after(0, lambda: self._display_error(str(e)))
+            err_msg = str(e)
+            self.after(0, lambda msg=err_msg: self._display_error(msg))
 
     def _display_result(self, ident, score, candidate):
         self.is_recording = False

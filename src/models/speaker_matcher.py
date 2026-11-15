@@ -7,87 +7,69 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import os
-from typing import cast
 import torch
 from src.models.feature_extractor import ECAPAFeatureExtractor
+
 
 class SpeakerMatcher:
     """
     Carga la base de datos de centroides y realiza la identificación 1:N
-    mediante producto punto matricial de similitud coseno.
+    combinando similitud coseno, normalización Z de cohorte (S-Norm) y margen Top-1/Top-2.
     """
-    def __init__(self, centroids_db_path=None, threshold=0.65):
-        # Resolve centroid database path relative to project root if not provided
-        if centroids_db_path is None:
-            centroids_db_path = str(PROJECT_ROOT / "embeddings_db" / "centroids.pt")
-        else:
-            # If a relative path is given, interpret it relative to project root
-            centroids_path_candidate = Path(centroids_db_path)
-            if not centroids_path_candidate.is_absolute():
-                centroids_db_path = str(PROJECT_ROOT / centroids_path_candidate)
-        if not os.path.exists(centroids_db_path):
-            raise FileNotFoundError(f"No se encontró la base de datos de centroides en: '{centroids_db_path}'")
+    def __init__(self, centroids_db_path="embeddings_db/centroids.pt", threshold=0.59, min_z_score=2.2, min_margin=0.05):
         if not os.path.exists(centroids_db_path):
             raise FileNotFoundError(f"No se encontró la base de datos de centroides en: '{centroids_db_path}'")
         
         self.threshold = threshold
+        self.min_z_score = min_z_score
+        self.min_margin = min_margin
         self.extractor = ECAPAFeatureExtractor()
         
-        # Cargar diccionario de centroides {speaker: tensor(192,)}
-        centroids_dict = cast(dict[str, torch.Tensor], torch.load(str(centroids_db_path), weights_only=True))
-        
-        # Mapeo ordenado de hablantes a índice matricial
+        centroids_dict = torch.load(centroids_db_path, weights_only=True)
         self.speaker_names = list(centroids_dict.keys())
         
-        # Construir matriz de centroides C de forma (U, 192)
         centroids_list = [centroids_dict[spk] for spk in self.speaker_names]
-        self.centroids_matrix = torch.stack(centroids_list) # (U, 192)
+        self.centroids_matrix = torch.stack(centroids_list)  # (U, 192)
 
     def identify_speaker(self, audio_file_path):
         """
-        Extrae el embedding del audio de prueba y calcula las similitudes coseno.
-        Retorna: (hablante_predicho, score_maximo, diccionario_scores)
+        Extrae el embedding del audio de prueba, calcula similitudes coseno
+        y evalúa Z-Score y margen competitivo frente a la cohorte.
         """
-        # 1. Extraer embedding normalizado (192,)
         test_emb = self.extractor.extract_embedding(audio_file_path)
 
-        # 2. Producto punto matricial -> Tensor de similitudes (U,)
-        #    C (U, 192) x test_emb (192,) -> S (U,)
+        # 1. Similitudes coseno brutas (U,)
         scores = torch.matmul(self.centroids_matrix, test_emb)
 
-        # 3. Obtener el máximo score e índice del hablante candidato
-        max_score, max_idx = torch.max(scores, dim=0)
-        max_score_val = float(max_score.item())
-        candidate_speaker = self.speaker_names[int(max_idx.item())]
+        # 2. Ordenar candidatos de mayor a menor similitud
+        sorted_scores, sorted_indices = torch.sort(scores, descending=True)
+        
+        max_score_val = sorted_scores[0].item()
+        second_score_val = sorted_scores[1].item() if len(sorted_scores) > 1 else 0.0
+        candidate_speaker = self.speaker_names[sorted_indices[0].item()]
+        runner_up_speaker = self.speaker_names[sorted_indices[1].item()] if len(sorted_scores) > 1 else "N/A"
 
-        # 4. Aplicar umbral adaptativo
-        if max_score_val >= self.threshold:
+        # 3. Calcular Z-Score respecto al resto de la cohorte (impostores)
+        cohort_scores = sorted_scores[1:]
+        cohort_mean = torch.mean(cohort_scores).item()
+        cohort_std = torch.std(cohort_scores).item()
+        z_score = (max_score_val - cohort_mean) / (cohort_std + 1e-6)
+        margin = max_score_val - second_score_val
+
+        # 4. Triple criterio de decisión: Umbral absoluto + Z-Score + Margen Top-1/Top-2
+        if max_score_val >= self.threshold and z_score >= self.min_z_score and margin >= self.min_margin:
             identified_as = candidate_speaker
         else:
             identified_as = "Desconocido"
 
-        # Crear diccionario de puntajes ordenado
-        all_scores = {spk: round(float(score.item()), 4) for spk, score in zip(self.speaker_names, scores)}
+        details = {
+            "all_scores": {spk: round(s.item(), 4) for spk, s in zip(self.speaker_names, scores)},
+            "z_score": round(z_score, 2),
+            "margin": round(margin, 4),
+            "runner_up": runner_up_speaker,
+            "runner_up_score": round(second_score_val, 4)
+        }
 
-        return identified_as, max_score_val, candidate_speaker, all_scores
+        print(f"[Matcher] Top-1: {candidate_speaker} ({max_score_val:.4f}) | Top-2: {runner_up_speaker} ({second_score_val:.4f}) | Z-Score: {z_score:.2f} | Margen: +{margin:.4f}")
 
-if __name__ == "__main__":
-    import pandas as pd
-
-    # Prueba unitaria usando una muestra del manifiesto
-    if os.path.exists("dataset_manifest.csv") and os.path.exists("embeddings_db/centroids.pt"):
-        df = pd.read_csv("dataset_manifest.csv")
-        sample_row = df.iloc[0]
-        sample_file = sample_row["file_path"]
-        ground_truth = sample_row["speaker"]
-
-        matcher = SpeakerMatcher(threshold=0.65)
-        ident, score, candidate, _ = matcher.identify_speaker(sample_file)
-
-        print("\n--- PRUEBA DE INFERENCIA BIOMÉTRICA (1:N) ---")
-        print(f"Archivo probado: {sample_file}")
-        print(f"Hablante real (Ground Truth): {ground_truth}")
-        print(f"Candidato más cercano: {candidate} (Similitud Coseno: {score:.4f})")
-        print(f"Resultado final (Umbral = 0.65): {ident}")
-    else:
-        print("Falta 'dataset_manifest.csv' o 'embeddings_db/centroids.pt'.")
+        return identified_as, max_score_val, candidate_speaker, details
