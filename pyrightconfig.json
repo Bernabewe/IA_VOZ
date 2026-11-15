@@ -1,0 +1,7 @@
+{
+    "extraPaths": [
+        "./env_voz/Lib/site-packages"
+    ],
+    "venvPath": ".",
+    "venv": "env_voz"
+}
