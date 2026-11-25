@@ -24,11 +24,13 @@ def inspect_and_build_manifest(dataset_dir="dataset_voz", output_csv="dataset_ma
     print(f"Escaneando directorio '{dataset_dir}'...")
 
     for root, _, files in os.walk(dataset_dir):
+        #Recorrer todos los archivos
         for file in files:
             if file.endswith(".wav"):
                 file_path = os.path.join(root, file)
 
                 # Extraer metadatos técnicos de la cabecera WAV con soundfile
+                #Aquí se sacan la frecuencia de muestreo, los canales y la duración
                 info = sf.info(file_path)
 
                 # Extraer metadata del nombre de archivo (ej. bernardo-Frase2-Dia1-MicA.wav)
@@ -52,6 +54,7 @@ def inspect_and_build_manifest(dataset_dir="dataset_voz", output_csv="dataset_ma
                 })
 
     df = pd.DataFrame(records)
+    # Exportar el manifiesto a CSV
     df.to_csv(output_csv, index=False)
 
     print("\n--- RESUMEN TÉCNICO DEL DATASET ---")
