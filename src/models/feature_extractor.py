@@ -8,6 +8,18 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import torch
+
+# PARCHE: Windows bloquea sentencepiece (Control de aplicaciones).
+# ECAPA no lo necesita (solo sirve para reconocimiento de texto), así que si no
+# carga, se usa un módulo vacío para que SpeechBrain pueda importarse.
+try:
+    import sentencepiece
+except ImportError:
+    import types
+    _falso = types.ModuleType("sentencepiece")
+    setattr(_falso, "SentencePieceProcessor", object)   # SpeechBrain pide este nombre al importar
+    sys.modules["sentencepiece"] = _falso
+
 from speechbrain.inference.speaker import EncoderClassifier
 from speechbrain.utils.fetching import LocalStrategy
 from src.data.audio_processor import load_and_normalize_audio

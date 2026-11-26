@@ -47,16 +47,18 @@ def load_and_normalize_audio(file_path: str, target_sr: int = 16000) -> tuple[to
     Carga un archivo WAV, valida energía y rango dinámico vocal, remuestrea a 16kHz,
     elimina silencios y normaliza amplitud para ECAPA-TDNN.
     """
+    # Cargar el audio
     data, sr = sf.read(file_path, dtype="float32")
     waveform = torch.from_numpy(data)
 
+    #Pasar a mono
     if waveform.dim() == 1:
         waveform = waveform.unsqueeze(0)
     else:
         waveform = waveform.T
         if waveform.shape[0] > 1:
             waveform = torch.mean(waveform, dim=0, keepdim=True)
-
+    #Cambiar a 16 kHz
     if sr != target_sr:
         resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr)
         waveform = resampler(waveform)
@@ -72,6 +74,7 @@ def load_and_normalize_audio(file_path: str, target_sr: int = 16000) -> tuple[to
         raise ValueError("No se detectó voz (micrófono silenciado o volumen muy bajo).")
 
     # 3. Validar contraste dinámico vocal y recortar silencios
+                                                    #menos a decibelios 
     waveform = trim_silence_energy(waveform, sr=sr, top_db=20.0)
 
     # 4. Normalización de amplitud pico segura (0.95)

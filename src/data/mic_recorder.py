@@ -12,14 +12,19 @@ def list_input_devices():
     Lista micrófonos disponibles priorizando APIs estables en Windows (WASAPI / DirectSound)
     para evitar errores WdmSyncIoctl (-9999) en auriculares USB.
     """
+    #Pedir todos los dispositivos de audio
     devices = sd.query_devices()
     hostapis = sd.query_hostapis()
     input_devices = []
 
     for idx, dev in enumerate(devices):
+        #Solo agregar dispositivos de entrada con canales válidos y APIs estables
+        #Quedarse solo con micrófonos
         if dev["max_input_channels"] > 0:
             api_name = hostapis[dev["hostapi"]]["name"]
             if "WASAPI" in api_name or "DirectSound" in api_name:
+                #Preferir WASAPI y DirectSound
+                #Se guardan solo los micrófonos que usan estas dos APIs, porque son las más estables en Windows.
                 input_devices.append({
                     "id": idx,
                     "name": f"{dev['name']} ({api_name})",
@@ -48,6 +53,7 @@ def record_audio_to_wav(output_path="temp_mic_capture.wav", duration_sec=4.0, ta
     os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
 
     dev_info = sd.query_devices(device_id, kind="input")
+    #Consultar el micrófono
     capture_sr = int(dev_info["default_samplerate"])
     # Usar 1 canal si lo soporta, o los canales nativos máximos (máx. 2) para evitar PaErrorCode -9999
     channels = 1
@@ -59,6 +65,7 @@ def record_audio_to_wav(output_path="temp_mic_capture.wav", duration_sec=4.0, ta
     print(f"Micrófono activo: [{dev_info['name']}] @ {capture_sr} Hz ({channels} ch)")
     print(f"Grabando durante {duration_sec} segundos... ¡Habla ahora!")
 
+    #Grabar
     recording = sd.rec(
         int(duration_sec * capture_sr),
         samplerate=capture_sr,
@@ -79,6 +86,7 @@ def record_audio_to_wav(output_path="temp_mic_capture.wav", duration_sec=4.0, ta
         resampler = torchaudio.transforms.Resample(orig_freq=capture_sr, new_freq=target_sr)
         tensor_audio = resampler(tensor_audio)
 
+    # Guardar el audio final en WAV
     mono_16k = tensor_audio.squeeze(0).numpy()
     sf.write(output_path, mono_16k, target_sr)
     return output_path

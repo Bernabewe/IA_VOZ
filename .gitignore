@@ -25,3 +25,14 @@ pretrained_models/
 .idea/
 *.swp
 .DS_Store
+
+
+env_voz/
+env_titanet/
+env_nemo_test/
+dataset_voz/
+embeddings_db/
+tmp_model/
+*.wav
+__pycache__/
+freeze.txt
