@@ -13,6 +13,7 @@ from src.data.mic_recorder import list_input_devices, record_audio_to_wav
 from src.models.speaker_matcher import SpeakerMatcher
 from src.models.phrase_detector import PhraseDetector
 from src.models.model_factory import MODEL_CONFIG, DEFAULT_MODEL, available_models
+from src.gui.comparison_view import ComparisonPanel
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -168,7 +169,7 @@ class SpeakerRecognitionApp(ctk.CTk):
             font=ctk.CTkFont(size=22, weight="bold")
         ).pack(anchor="w")
         ctk.CTkLabel(
-            titles, text="Biometría de hablante · ECAPA-TDNN / ERes2NetV2 · 1:N",
+            titles, text="Biometría de hablante · ECAPA-TDNN / ERes2NetV2 / TitaNet-Large · 1:N",
             text_color=MUTED, font=ctk.CTkFont(size=13)
         ).pack(anchor="w")
 
@@ -327,6 +328,33 @@ class SpeakerRecognitionApp(ctk.CTk):
             font=ctk.CTkFont(size=13)
         )
         self.lbl_info.pack(padx=24, pady=(4, 12))
+
+        # ----- Panel de comparación de los 3 modelos (misma página, mismo scroll)
+        self.comparison_panel = ComparisonPanel(
+            self.body,
+            get_microphone=self._get_microphone,
+            can_start=self._can_start_comparison,
+            on_busy_change=self._on_comparison_busy,
+        )
+        self.comparison_panel.pack(fill="x", padx=40, pady=(0, 28))
+
+    # ---------------------------------------------------------------
+    # Conexión con el panel de comparación
+    # ---------------------------------------------------------------
+    def _get_microphone(self):
+        """Devuelve (id_del_dispositivo, etiqueta) del micrófono elegido arriba."""
+        label = self.combo_mic.get()
+        return self.devices_map.get(label), label
+
+    def _can_start_comparison(self):
+        """El panel solo puede grabar si la app ya cargó y no está grabando ni cambiando de modelo."""
+        return (not self.is_recording and not self.is_loading
+                and self.matcher is not None and self.detector is not None)
+
+    def _on_comparison_busy(self, busy):
+        """Mientras el panel graba, se bloquean los controles de arriba (y viceversa)."""
+        self.is_recording = busy
+        self._set_controls(not busy)
 
     # ---------------------------------------------------------------
     # PASO 3: Lógica

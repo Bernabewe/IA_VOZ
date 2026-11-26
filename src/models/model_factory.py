@@ -11,6 +11,10 @@ MODEL_CONFIG = {
         "centroids": "embeddings_db/centroids_eres2netv2.pt",
         "threshold": 0.59,
     },
+    "TitaNet-Large": {
+        "centroids": "embeddings_db/centroids_titanet.pt",
+        "threshold": 0.59,   # PROVISIONAL: se calibrará con datos de validación
+    },
 }
 
 DEFAULT_MODEL = "ECAPA-TDNN"
@@ -28,4 +32,7 @@ def create_extractor(model_name: str):
     if model_name == "ERes2NetV2":
         from src.models.eres2net_extractor import ERes2NetV2FeatureExtractor
         return ERes2NetV2FeatureExtractor()
+    if model_name == "TitaNet-Large":
+        from src.models.titanet_extractor import TitaNetFeatureExtractor
+        return TitaNetFeatureExtractor()
     raise ValueError(f"Modelo desconocido: '{model_name}'. Opciones: {available_models()}")
