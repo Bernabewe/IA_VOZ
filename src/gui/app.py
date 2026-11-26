@@ -56,16 +56,10 @@ class SpeakerRecognitionApp(ctk.CTk):
         super().__init__()
 
         self.title("Sistema Biométrico de Identificación de Hablante (1:N)")
-<<<<<<< HEAD
         self.resizable(True, True)          # ahora se puede agrandar o achicar
         self.minsize(560, 420)              # tamaño mínimo para que no se deforme
         self.configure(fg_color=BG)
         self._fit_window(820, 830)          # tamaño deseado, ajustado a la pantalla
-=======
-        self.geometry("820x700")
-        self.resizable(False, False)
-        self.configure(fg_color=BG)
->>>>>>> origin/main
 
         # Contenedor con scroll: todo el contenido va dentro de este marco
         self.body = ctk.CTkScrollableFrame(self, fg_color="transparent", corner_radius=0)
@@ -89,7 +83,6 @@ class SpeakerRecognitionApp(ctk.CTk):
         threading.Thread(target=self._init_model, daemon=True).start()
 
     # ---------------------------------------------------------------
-<<<<<<< HEAD
     # NUEVO: ajustar la ventana al tamaño de la pantalla
     # ---------------------------------------------------------------
     def _fit_window(self, want_w=820, want_h=830):
@@ -115,8 +108,6 @@ class SpeakerRecognitionApp(ctk.CTk):
         self.wm_geometry(f"+{x}+{y}")
 
     # ---------------------------------------------------------------
-=======
->>>>>>> origin/main
     # Pequeñas ayudas para no repetir código
     # ---------------------------------------------------------------
     def _section_label(self, parent, text):
@@ -127,15 +118,9 @@ class SpeakerRecognitionApp(ctk.CTk):
         )
 
     def _make_card(self):
-<<<<<<< HEAD
         """Tarjeta con esquinas redondeadas y borde fino (dentro del marco con scroll)."""
         return ctk.CTkFrame(
             self.body, fg_color=CARD, corner_radius=16,
-=======
-        """Tarjeta con esquinas redondeadas y borde fino."""
-        return ctk.CTkFrame(
-            self, fg_color=CARD, corner_radius=16,
->>>>>>> origin/main
             border_width=1, border_color=BORDER
         )
 
@@ -149,7 +134,6 @@ class SpeakerRecognitionApp(ctk.CTk):
         bg, fg = BADGE_STYLES[kind]
         self.lbl_badge.configure(text=f"  {text}  ", fg_color=bg, text_color=fg)
 
-<<<<<<< HEAD
     def _set_controls(self, enabled):
         """Habilita o deshabilita el selector de modelo y el botón de grabar."""
         state = "normal" if enabled else "disabled"
@@ -160,18 +144,12 @@ class SpeakerRecognitionApp(ctk.CTk):
         n = len(self.matcher.speaker_names) if self.matcher is not None else 0
         return f"Listo · {self.current_model} · {n} hablantes"
 
-=======
->>>>>>> origin/main
     # ---------------------------------------------------------------
     # PASO 2: Construcción de la interfaz
     # ---------------------------------------------------------------
     def _build_ui(self):
         # ----- Encabezado: logo + título a la izquierda, estado a la derecha
-<<<<<<< HEAD
         header = ctk.CTkFrame(self.body, fg_color="transparent")
-=======
-        header = ctk.CTkFrame(self, fg_color="transparent")
->>>>>>> origin/main
         header.pack(fill="x", padx=40, pady=(28, 0))
 
         left = ctk.CTkFrame(header, fg_color="transparent")
@@ -191,11 +169,7 @@ class SpeakerRecognitionApp(ctk.CTk):
             font=ctk.CTkFont(size=22, weight="bold")
         ).pack(anchor="w")
         ctk.CTkLabel(
-<<<<<<< HEAD
             titles, text="Biometría de hablante · ECAPA-TDNN / ERes2NetV2 / TitaNet-Large · 1:N",
-=======
-            titles, text="Biometría de hablante · ECAPA-TDNN · 1:N",
->>>>>>> origin/main
             text_color=MUTED, font=ctk.CTkFont(size=13)
         ).pack(anchor="w")
 
@@ -204,7 +178,6 @@ class SpeakerRecognitionApp(ctk.CTk):
             font=ctk.CTkFont(size=13, weight="bold")
         )
         self.lbl_status.pack(side="right")
-<<<<<<< HEAD
         self._set_status("Cargando modelos y centroides...", "loading")
 
         # ----- Tarjeta de configuración (modelo + micrófono + umbral)
@@ -229,19 +202,6 @@ class SpeakerRecognitionApp(ctk.CTk):
         mic_row = ctk.CTkFrame(card_cfg, fg_color="transparent")
         mic_row.pack(fill="x", padx=24)
 
-=======
-        self._set_status("Cargando modelo y centroides...", "loading")
-
-        # ----- Tarjeta de configuración (micrófono + umbral)
-        card_cfg = self._make_card()
-        card_cfg.pack(fill="x", padx=40, pady=(22, 0))
-
-        self._section_label(card_cfg, "Micrófono").pack(anchor="w", padx=24, pady=(20, 6))
-
-        mic_row = ctk.CTkFrame(card_cfg, fg_color="transparent")
-        mic_row.pack(fill="x", padx=24)
-
->>>>>>> origin/main
         self.combo_mic = ctk.CTkComboBox(
             mic_row, height=40, corner_radius=10, state="readonly",
             fg_color=BG, border_color="#2C3242", button_color="#2C3242",
@@ -259,19 +219,12 @@ class SpeakerRecognitionApp(ctk.CTk):
         self.btn_refresh_mic.pack(side="left")
 
         # Umbral: título a la izquierda y valor en una "chip" a la derecha
-<<<<<<< HEAD
         initial_tau = self.model_thresholds[self.current_model]
-=======
->>>>>>> origin/main
         tau_row = ctk.CTkFrame(card_cfg, fg_color="transparent")
         tau_row.pack(fill="x", padx=24, pady=(22, 6))
         self._section_label(tau_row, "Umbral de decisión (Tau)").pack(side="left")
         self.lbl_thresh = ctk.CTkLabel(
-<<<<<<< HEAD
             tau_row, text=f"{initial_tau:.2f}", height=26, corner_radius=8,
-=======
-            tau_row, text="0.59", height=26, corner_radius=8,
->>>>>>> origin/main
             fg_color="#1B2440", text_color=ACCENT,
             font=ctk.CTkFont(size=13, weight="bold")
         )
@@ -283,13 +236,8 @@ class SpeakerRecognitionApp(ctk.CTk):
             button_color=ACCENT, button_hover_color="#8FBBFF",
             command=self._on_threshold_change
         )
-<<<<<<< HEAD
         # El slider trabaja con enteros: 59 = 0.59
         self.slider_thresh.set(round(initial_tau * 100))
-=======
-        # Valor inicial 0.59 (el slider trabaja con enteros: 59 = 0.59)
-        self.slider_thresh.set(59)
->>>>>>> origin/main
         self.slider_thresh.pack(fill="x", padx=24)
 
         hint_row = ctk.CTkFrame(card_cfg, fg_color="transparent")
@@ -301,11 +249,7 @@ class SpeakerRecognitionApp(ctk.CTk):
 
         # ----- Botón principal de grabación (grande y redondeado)
         self.btn_record = ctk.CTkButton(
-<<<<<<< HEAD
             self.body, text=BTN_TEXT, height=64, width=360, corner_radius=32,
-=======
-            self, text=BTN_TEXT, height=64, width=360, corner_radius=32,
->>>>>>> origin/main
             fg_color=ACCENT, hover_color="#8FBBFF",
             text_color=BG, text_color_disabled="#2B3350",
             font=ctk.CTkFont(size=17, weight="bold"),
@@ -365,7 +309,6 @@ class SpeakerRecognitionApp(ctk.CTk):
 
         # La marca y su texto se colocan con "relx" (0.0 a 1.0 del ancho)
         self.marker_tau = ctk.CTkFrame(bar_box, width=2, height=24, fg_color=TEXT, corner_radius=1)
-<<<<<<< HEAD
         self.marker_tau.place(relx=initial_tau, y=0, anchor="n")
         self.lbl_tau_mark = ctk.CTkLabel(
             bar_box, text=f"Tau {initial_tau:.2f}", text_color=MUTED, font=ctk.CTkFont(size=12)
@@ -382,22 +325,10 @@ class SpeakerRecognitionApp(ctk.CTk):
         # Línea de información extra (errores, mensajes de captura, modelo y umbral usados)
         self.lbl_info = ctk.CTkLabel(
             card_res, text="", text_color=MUTED, wraplength=640,
-=======
-        self.marker_tau.place(relx=0.59, y=0, anchor="n")
-        self.lbl_tau_mark = ctk.CTkLabel(
-            bar_box, text="Tau 0.59", text_color=MUTED, font=ctk.CTkFont(size=12)
-        )
-        self.lbl_tau_mark.place(relx=0.59, y=28, anchor="n")
-
-        # Línea de información extra (errores, mensajes de captura, umbral usado)
-        self.lbl_info = ctk.CTkLabel(
-            card_res, text="", text_color=MUTED, wraplength=700,
->>>>>>> origin/main
             font=ctk.CTkFont(size=13)
         )
         self.lbl_info.pack(padx=24, pady=(4, 12))
 
-<<<<<<< HEAD
         # ----- Panel de comparación de los 3 modelos (misma página, mismo scroll)
         self.comparison_panel = ComparisonPanel(
             self.body,
@@ -427,10 +358,6 @@ class SpeakerRecognitionApp(ctk.CTk):
 
     # ---------------------------------------------------------------
     # PASO 3: Lógica
-=======
-    # ---------------------------------------------------------------
-    # PASO 3: Lógica (igual que antes, solo cambia cómo se muestra)
->>>>>>> origin/main
     # ---------------------------------------------------------------
     def _load_devices(self):
         devices = list_input_devices()
@@ -457,17 +384,9 @@ class SpeakerRecognitionApp(ctk.CTk):
 
     def _on_threshold_change(self, val):
         scaled_val = round(float(val) / 100.0, 2)
-<<<<<<< HEAD
         self._update_threshold_ui(scaled_val)
         # Guardar el umbral para el modelo activo
         self.model_thresholds[self.current_model] = scaled_val
-=======
-        # Actualiza el número, la marca de la barra y el texto "Tau"
-        self.lbl_thresh.configure(text=f"{scaled_val:.2f}")
-        self.lbl_tau_mark.configure(text=f"Tau {scaled_val:.2f}")
-        self.marker_tau.place_configure(relx=scaled_val)
-        self.lbl_tau_mark.place_configure(relx=scaled_val)
->>>>>>> origin/main
         if self.matcher is not None:
             self.matcher.threshold = scaled_val
 
@@ -488,13 +407,8 @@ class SpeakerRecognitionApp(ctk.CTk):
             self.after(0, lambda msg=err_msg: self._set_status(f"Error cargando modelo: {msg}", "error"))
 
     def _on_model_ready(self):
-<<<<<<< HEAD
         self._set_status(self._ready_text(), "ok")
         self._set_controls(True)
-=======
-        self._set_status("Sistema listo · 30 hablantes", "ok")
-        self.btn_record.configure(state="normal")
->>>>>>> origin/main
 
     # ----- Cambio de modelo desde el selector -----
     def _on_model_change(self, new_model):
@@ -559,23 +473,15 @@ class SpeakerRecognitionApp(ctk.CTk):
         if self.is_recording or self.is_loading or self.matcher is None or self.detector is None:
             return
         self.is_recording = True
-<<<<<<< HEAD
         self._set_controls(False)
         self.btn_record.configure(text="Grabando... ¡Habla ahora!")
-=======
-        self.btn_record.configure(state="disabled", text="Grabando... ¡Habla ahora!")
->>>>>>> origin/main
 
         # Dejar la tarjeta de resultados "limpia" para la nueva captura
         self._set_badge("Escuchando audio...", "listen")
         self.lbl_candidate.configure(text="—")
         self.lbl_score.configure(text="0.0000", text_color=ACCENT)
-<<<<<<< HEAD
         self.lbl_phrase.configure(text="")
         self.lbl_info.configure(text="Capturando 4.0 segundos desde micrófono... Di «Yo soy (tu nombre)»")
-=======
-        self.lbl_info.configure(text="Capturando 4.0 segundos desde micrófono...")
->>>>>>> origin/main
         self.progress_score.configure(progress_color=ACCENT)
         self.progress_score.set(0.0)
 
@@ -586,16 +492,9 @@ class SpeakerRecognitionApp(ctk.CTk):
 
     def _process_audio_task(self, device_id):
         try:
-<<<<<<< HEAD
             matcher = self.matcher
             if matcher is None or self.detector is None:
                 raise RuntimeError("El modelo no está cargado.")
-=======
-            # Verificar que el modelo esté cargado
-            if self.matcher is None:
-                raise RuntimeError("El modelo no está cargado.")
-            # Verificar que se eligió un micrófono válido
->>>>>>> origin/main
             if device_id is None:
                 raise RuntimeError("No se ha seleccionado un micrófono válido.")
 
@@ -622,7 +521,6 @@ class SpeakerRecognitionApp(ctk.CTk):
 
     def _display_result(self, ident, score, candidate, phrase, has_claim, claimed):
         self.is_recording = False
-<<<<<<< HEAD
         self.btn_record.configure(text=BTN_TEXT)
         self._set_controls(True)
 
@@ -670,33 +568,6 @@ class SpeakerRecognitionApp(ctk.CTk):
         self._set_controls(True)
         self._set_badge("Error de captura", "bad")
         self.lbl_phrase.configure(text="")
-=======
-        self.btn_record.configure(state="normal", text=BTN_TEXT)
-
-        # Escalar score entre 0 y 1 para la barra
-        clamped_score = max(0.0, min(1.0, score))
-        identified = ident != "Desconocido"
-        color = OK if identified else BAD
-
-        self.progress_score.configure(progress_color=color)
-        self.progress_score.set(clamped_score)
-        self.lbl_candidate.configure(text=str(candidate))
-        self.lbl_score.configure(text=f"{score:.4f}", text_color=color)
-
-        if identified:
-            self._set_badge(f"Identificado: {ident}", "ok")
-        else:
-            self._set_badge("Acceso denegado: desconocido", "bad")
-
-        # Mostrar umbral sólo si el modelo está cargado
-        threshold_str = f"{self.matcher.threshold:.2f}" if self.matcher is not None else "—"
-        self.lbl_info.configure(text=f"Umbral usado: {threshold_str}")
-
-    def _display_error(self, err_msg):
-        self.is_recording = False
-        self.btn_record.configure(state="normal", text=BTN_TEXT)
-        self._set_badge("Error de captura", "bad")
->>>>>>> origin/main
         self.lbl_info.configure(text=err_msg)
 
 
